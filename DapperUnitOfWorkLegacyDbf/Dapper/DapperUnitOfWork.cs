@@ -12,6 +12,7 @@ public class DapperUnitOfWork : IDisposable
 {
     private IDbConnection _connection;
     private IDbTransaction _transaction;
+    private string _connectionString { get; } = string.Empty;
 
     private CustomerRepository? _customerRepository;
     public CustomerRepository CustomerRepository
@@ -24,6 +25,8 @@ public class DapperUnitOfWork : IDisposable
 
     public DapperUnitOfWork(string connString)
     {
+        _connectionString = connString;
+
         if (FluentMapper.EntityMaps.Any(m => m.Key == typeof(Entities.Customer)) == false)
         {
             FluentMapper.Initialize(config =>
@@ -33,7 +36,7 @@ public class DapperUnitOfWork : IDisposable
             });
         }
 
-        _connection = new OleDbConnection(connString);
+        _connection = new OleDbConnection(_connectionString);
         _connection.Open();
         var cmd = $"set null off{Environment.NewLine}set exclusive off{Environment.NewLine}set deleted on{Environment.NewLine}";
         //cmd += $"end transaction";
@@ -58,15 +61,15 @@ public class DapperUnitOfWork : IDisposable
             //var cmd = $"close all{Environment.NewLine}close databases all{Environment.NewLine}";
             _transaction.Dispose();
             _transaction = _connection.BeginTransaction();
+            //var cmd = $"use in select('customers');
+            //_connection.Execute(cmd, transaction: _transaction);
             ResetRepositories();
         }
     }
 
     public void Rollback()
     {
-        var cmd = $"close all{Environment.NewLine}close databases all{Environment.NewLine}";
-        _connection.Execute(cmd);
-        if (_transaction != null)
+        if (_transaction is not null)
         {
             _transaction.Rollback();
         }

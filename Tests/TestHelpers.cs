@@ -21,15 +21,21 @@ public static class TestHelpers
         });
     }
 
-    public static string CreateAndSeedSampleDatabase()
+    public static string GetTemporaryDbcFilename()
+    {
+        string copyDirectory = Path.GetTempPath();
+        return Path.Combine(copyDirectory, "sample.dbc");
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Windows only.")]
+    public static void CreateAndSeedSampleDatabase(string tempDbcFilename)
     {
         string assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
         string sourceDirectory = Path.Combine(assemblyLocation, @"database");
-        string copyDirectory = Path.GetTempPath();
-        CopyFileList(sourceDirectory, copyDirectory);
-        var copyDbcFile = Path.Combine(copyDirectory, "sample.dbc");
 
-        var connString = $"Provider=vfpoledb;Data Source='{copyDbcFile}';Collating Sequence=machine;Mode=Share Deny None;";
+        CopyFileList(sourceDirectory, Path.GetDirectoryName(tempDbcFilename));
+
+        var connString = $"Provider=vfpoledb;Data Source='{tempDbcFilename}';Collating Sequence=machine;Mode=Share Deny None;";
         using OleDbConnection conn = new(connString);
         using var command = conn.CreateCommand();
         command.CommandText = $"set null off{Environment.NewLine}set exclusive off{Environment.NewLine}set deleted on{Environment.NewLine}";
@@ -90,8 +96,10 @@ public static class TestHelpers
         pTx_value.Value = Convert.ToDecimal(-100);
         command.ExecuteNonQuery();
 
+        command.CommandText = @"use in select('customers')";
+        command.ExecuteNonQuery();
+
         conn.Close();
-        return copyDbcFile;
     }
 
     private static void CopyFileList(string source, string destination)
@@ -99,12 +107,19 @@ public static class TestHelpers
         foreach (string filename in DataBaseFileNames)
         {
             var destFile = Path.Combine(destination, filename);
+            File.Copy(Path.Combine(source, filename), destFile, true);
+        }
+    }
+
+    public static void DeleteTemporaryData(string location)
+    {
+        foreach (string filename in DataBaseFileNames)
+        {
+            var destFile = Path.Combine(location, filename);
             if (File.Exists(destFile))
             {
                 File.Delete(destFile);
             }
-
-            File.Copy(Path.Combine(source, filename), destFile, true);
         }
     }
 }
