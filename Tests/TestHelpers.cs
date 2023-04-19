@@ -5,12 +5,31 @@ namespace Tests;
 
 public static class TestHelpers
 {
+    private static List<string> DataBaseFileNames { get; set; } = new List<string>();
+
+    static TestHelpers()
+    {
+        DataBaseFileNames.AddRange(new string[]
+        {
+            "sample.dcx",
+            "sample.dct",
+            "sample.dbc",
+            "customers.dbf",
+            "customers.cdx",
+            "customertransactions.dbf",
+            "customertransactions.cdx"
+        });
+    }
+
     public static string CreateAndSeedSampleDatabase()
     {
-        var assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-        string dbcLocation = Path.Combine(assemblyLocation, @"database\sample.dbc");
+        string assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
+        string sourceDirectory = Path.Combine(assemblyLocation, @"database");
+        string copyDirectory = Path.GetTempPath();
+        CopyFileList(sourceDirectory, copyDirectory);
+        var copyDbcFile = Path.Combine(copyDirectory, "sample.dbc");
 
-        var connString = $"Provider=vfpoledb;Data Source='{dbcLocation}';Collating Sequence=machine;Mode=Share Deny None;";
+        var connString = $"Provider=vfpoledb;Data Source='{copyDbcFile}';Collating Sequence=machine;Mode=Share Deny None;";
         using OleDbConnection conn = new(connString);
         using var command = conn.CreateCommand();
         command.CommandText = $"set null off{Environment.NewLine}set exclusive off{Environment.NewLine}set deleted on{Environment.NewLine}";
@@ -41,7 +60,7 @@ public static class TestHelpers
         command.ExecuteNonQuery();
 
         command.Parameters.Clear();
-        command.CommandText = @"insert into Transactions (tx_cust, tx_ref, tx_type, tx_value ) values (?, ?, ?, ?)";
+        command.CommandText = @"insert into CustomerTransactions (tx_cust, tx_ref, tx_type, tx_value ) values (?, ?, ?, ?)";
         var pTx_cust = command.Parameters.Add("@pTx_cust", OleDbType.VarChar, 10);
         var pTx_ref = command.Parameters.Add("@pTx_ref", OleDbType.VarChar, 20);
         var pTx_type = command.Parameters.Add("@pTx_type", OleDbType.VarChar, 1);
@@ -72,6 +91,20 @@ public static class TestHelpers
         command.ExecuteNonQuery();
 
         conn.Close();
-        return dbcLocation;
+        return copyDbcFile;
+    }
+
+    private static void CopyFileList(string source, string destination)
+    {
+        foreach (string filename in DataBaseFileNames)
+        {
+            var destFile = Path.Combine(destination, filename);
+            if (File.Exists(destFile))
+            {
+                File.Delete(destFile);
+            }
+
+            File.Copy(Path.Combine(source, filename), destFile, true);
+        }
     }
 }

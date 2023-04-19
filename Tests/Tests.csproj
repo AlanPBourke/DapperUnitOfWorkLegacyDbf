@@ -13,6 +13,8 @@
   <ItemGroup>
     <None Remove="Database\customers.CDX" />
     <None Remove="Database\customers.dbf" />
+    <None Remove="Database\customertransactions.CDX" />
+    <None Remove="Database\customertransactions.dbf" />
     <None Remove="Database\sample.DBC" />
     <None Remove="Database\sample.DCT" />
     <None Remove="Database\sample.DCX" />
@@ -27,6 +29,12 @@
     <Content Include="Database\customers.dbf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Database\customertransactions.CDX">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Database\customertransactions.dbf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Database\sample.DBC">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -34,12 +42,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Database\sample.DCX">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Database\transactions.CDX">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Database\transactions.dbf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

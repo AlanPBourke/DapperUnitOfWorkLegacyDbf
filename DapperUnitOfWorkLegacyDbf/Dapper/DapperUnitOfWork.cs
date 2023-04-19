@@ -1,5 +1,7 @@
 ﻿//https://ianrufus.com/blog/2017/04/c-unit-of-work-pattern-with-dapper/
 using Dapper;
+using Dapper.FluentMap;
+using DapperUnitOfWorkLegacyDbf.EntityMaps;
 using DapperUnitOfWorkLegacyDbf.Repositories;
 using System.Data;
 using System.Data.OleDb;
@@ -22,6 +24,15 @@ public class DapperUnitOfWork : IDisposable
 
     public DapperUnitOfWork(string connString)
     {
+        if (FluentMapper.EntityMaps.Any(m => m.Key == typeof(Entities.Customer)) == false)
+        {
+            FluentMapper.Initialize(config =>
+            {
+                config.AddMap(new CustomerEntityMap());
+                config.AddMap(new CustomerTransactionEntityMap());
+            });
+        }
+
         _connection = new OleDbConnection(connString);
         _connection.Open();
         var cmd = $"set null off{Environment.NewLine}set exclusive off{Environment.NewLine}set deleted on{Environment.NewLine}";
@@ -43,6 +54,8 @@ public class DapperUnitOfWork : IDisposable
         }
         finally
         {
+
+            //var cmd = $"close all{Environment.NewLine}close databases all{Environment.NewLine}";
             _transaction.Dispose();
             _transaction = _connection.BeginTransaction();
             ResetRepositories();
@@ -51,6 +64,8 @@ public class DapperUnitOfWork : IDisposable
 
     public void Rollback()
     {
+        var cmd = $"close all{Environment.NewLine}close databases all{Environment.NewLine}";
+        _connection.Execute(cmd);
         if (_transaction != null)
         {
             _transaction.Rollback();
@@ -59,16 +74,15 @@ public class DapperUnitOfWork : IDisposable
 
     public void Dispose()
     {
-        if (_transaction != null)
+
+        if (_transaction is not null)
         {
             _transaction.Dispose();
-            //_transaction = null;
         }
 
-        if (_connection != null)
+        if (_connection is not null)
         {
             _connection.Dispose();
-            //_connection = null;
         }
     }
 

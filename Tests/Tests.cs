@@ -18,12 +18,42 @@ public class IntegrationTests : IDisposable
     [Fact, Priority(1)]
     public void CustomerCountShouldReturnTwo()
     {
+        TestHelpers.CreateAndSeedSampleDatabase();
         DapperUnitOfWork u = new(ConnString);
         var custs = u.CustomerRepository.GetAll();
         Assert.Equal(2, custs.Count());
     }
 
-    [Fact, Priority(10)]
+    [Fact, Priority(1)]
+    public void AddCustomer()
+    {
+        TestHelpers.CreateAndSeedSampleDatabase();
+        DapperUnitOfWork u = new(ConnString);
+        u.CustomerRepository.Add(new Customer
+        {
+            Code = "XXX999",
+            Address1 = "address 1",
+            Address2 = "address 2",
+            Postcode = "postcode"
+        });
+        u.Commit();
+        //u = new(ConnString);
+        var custs = u.CustomerRepository.GetAll();
+        Assert.Equal(3, custs.Count());
+    }
+
+    [Fact, Priority(98)]
+    public void Delete_Rollback_Customer_CustomerCountShouldReturnTwo()
+    {
+        DapperUnitOfWork u = new(ConnString);
+        u.CustomerRepository.Delete("IKS220");
+        u.Rollback();
+        u = new(ConnString);
+        var custs = u.CustomerRepository.GetAll();
+        Assert.Equal(2, custs.Count());
+    }
+
+    [Fact, Priority(99)]
     public void Delete_Commit_Customer_CustomerCountShouldReturnOne()
     {
         DapperUnitOfWork u = new(ConnString);

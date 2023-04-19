@@ -12,7 +12,7 @@ public class Customer
     public string? Postcode { get; set; }
 
     [Write(false)]
-    public decimal Balance { get; set; }
+    public float Balance { get; set; }
 
     public override string ToString()
     {
