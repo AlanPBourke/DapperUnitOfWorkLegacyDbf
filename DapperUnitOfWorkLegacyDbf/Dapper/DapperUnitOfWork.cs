@@ -23,6 +23,15 @@ public class DapperUnitOfWork : IDisposable
         }
     }
 
+    private CustomerTransactionRepository? _customerTransactionRepository;
+    public CustomerTransactionRepository CustomerTransactionRepository
+    {
+        get
+        {
+            return _customerTransactionRepository ?? (_customerTransactionRepository = new CustomerTransactionRepository(_transaction));
+        }
+    }
+
     public DapperUnitOfWork(string connString)
     {
         _connectionString = connString;
@@ -58,11 +67,8 @@ public class DapperUnitOfWork : IDisposable
         finally
         {
 
-            //var cmd = $"close all{Environment.NewLine}close databases all{Environment.NewLine}";
             _transaction.Dispose();
             _transaction = _connection.BeginTransaction();
-            //var cmd = $"use in select('customers');
-            //_connection.Execute(cmd, transaction: _transaction);
             ResetRepositories();
         }
     }
@@ -72,6 +78,9 @@ public class DapperUnitOfWork : IDisposable
         if (_transaction is not null)
         {
             _transaction.Rollback();
+            _transaction.Dispose();
+            _transaction = _connection.BeginTransaction();
+            ResetRepositories();
         }
     }
 

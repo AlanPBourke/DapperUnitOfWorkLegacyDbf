@@ -14,18 +14,38 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
             _transaction = t;
         }
 
-        public CustomerTransaction GetById(int id)
+        public CustomerTransaction? GetById(int id)
         {
-            var cmd = @"select * from customertransactions where id=?";
-            // EntityMap takes care of field names to entity properties.
-            return _connection.QueryFirstOrDefault<CustomerTransaction>(cmd, param: new { i = id }, _transaction);
+            var cmd = @"select tx_cust, tx_type, tx_ref, tx_value, id from customertransactions where id=?";
+
+            try
+            {
+                return _connection.QuerySingle<CustomerTransaction>(cmd, param: new { i = id }, _transaction);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
-        public List<CustomerTransaction> GetAllForCustomer(string customerCode)
+        public List<CustomerTransaction> GetForCustomer(string customerCode)
         {
-            var cmd = @"select * from customertransactions where customercode=?";
-            // EntityMap takes care of field names to entity properties.
+            var cmd = @"select tx_cust, tx_type, tx_ref, tx_value, id from customertransactions where tx_cust=?";
             return _connection.Query<CustomerTransaction>(cmd, param: new { c = customerCode }, _transaction).ToList();
+        }
+
+        public void Add(CustomerTransaction customerTransaction)
+        {
+            var cmd = @"insert into CustomerTransactions (tx_cust, tx_type, tx_ref, tx_value) ";
+            cmd += "values (?, ?, ?, ?)";
+            _connection.ExecuteScalar(cmd, param: new
+            {
+                acc = customerTransaction.CustomerCode,
+                type = customerTransaction.Type,
+                reference = customerTransaction.Reference,
+                value = customerTransaction.Value
+            },
+            _transaction);
         }
     }
 }

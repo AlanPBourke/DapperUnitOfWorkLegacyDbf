@@ -111,8 +111,13 @@ public static class TestHelpers
         }
     }
 
-    public static void DeleteTemporaryData(string location)
+    public static void DeleteTemporaryData(string? location)
     {
+        if (location is null)
+        {
+            return;
+        }
+
         foreach (string filename in DataBaseFileNames)
         {
             var destFile = Path.Combine(location, filename);

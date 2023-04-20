@@ -57,8 +57,6 @@ public class CustomerRepository
 
         },
         _transaction);
-        //_connection.Execute("use in select('customer')", param: new { }, transaction: _transaction);
-        //_connection.Execute("close databases", param: new { }, transaction: _transaction);
     }
 
     public void Delete(string code)
