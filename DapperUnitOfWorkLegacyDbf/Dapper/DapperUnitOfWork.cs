@@ -1,5 +1,4 @@
-﻿//https://ianrufus.com/blog/2017/04/c-unit-of-work-pattern-with-dapper/
-using Dapper;
+﻿using Dapper;
 using Dapper.FluentMap;
 using DapperUnitOfWorkLegacyDbf.EntityMaps;
 using DapperUnitOfWorkLegacyDbf.Repositories;
@@ -10,31 +9,33 @@ namespace DapperUnitOfWorkLegacyDbf.Dapper;
 
 public class DapperUnitOfWork : IDisposable
 {
-    private IDbConnection _connection;
-    private IDbTransaction _transaction;
-    private string _connectionString { get; } = string.Empty;
+    private IDbConnection dbConnection;
+    private IDbTransaction dbTransaction;
 
-    private CustomerRepository? _customerRepository;
-    public CustomerRepository CustomerRepository
+    private string ConnectionString { get; set; } = string.Empty;
+
+    private CustomerTransactionRepository? customerTransactionRepository { get; set; }
+    public CustomerTransactionRepository? CustomerTransactionRepository
     {
         get
         {
-            return _customerRepository ?? (_customerRepository = new CustomerRepository(_transaction));
+            return customerTransactionRepository ?? (customerTransactionRepository = new CustomerTransactionRepository(dbTransaction));
         }
     }
 
-    private CustomerTransactionRepository? _customerTransactionRepository;
-    public CustomerTransactionRepository CustomerTransactionRepository
+    private CustomerRepository? customerRepository { get; set; }
+    public CustomerRepository? CustomerRepository
     {
         get
         {
-            return _customerTransactionRepository ?? (_customerTransactionRepository = new CustomerTransactionRepository(_transaction));
+            return customerRepository ?? (customerRepository = new CustomerRepository(dbTransaction));
         }
     }
 
+    // https://ianrufus.com/blog/2017/04/c-unit-of-work-pattern-with-dapper/
     public DapperUnitOfWork(string connString)
     {
-        _connectionString = connString;
+        ConnectionString = connString;
 
         if (FluentMapper.EntityMaps.Any(m => m.Key == typeof(Entities.Customer)) == false)
         {
@@ -45,41 +46,40 @@ public class DapperUnitOfWork : IDisposable
             });
         }
 
-        _connection = new OleDbConnection(_connectionString);
-        _connection.Open();
+        dbConnection = new OleDbConnection(ConnectionString);
+        dbConnection.Open();
         var cmd = $"set null off{Environment.NewLine}set exclusive off{Environment.NewLine}set deleted on{Environment.NewLine}";
-        //cmd += $"end transaction";
-        _connection.Execute(cmd);
-        _transaction = _connection.BeginTransaction();
+        dbConnection.Execute(cmd);
+        dbTransaction = dbConnection.BeginTransaction();
     }
 
     public void Commit()
     {
         try
         {
-            _transaction.Commit();
+            dbTransaction.Commit();
         }
         catch
         {
-            _transaction.Rollback();
+            dbTransaction.Rollback();
             throw;
         }
         finally
         {
 
-            _transaction.Dispose();
-            _transaction = _connection.BeginTransaction();
+            dbTransaction.Dispose();
+            dbTransaction = dbConnection.BeginTransaction();
             ResetRepositories();
         }
     }
 
     public void Rollback()
     {
-        if (_transaction is not null)
+        if (dbTransaction is not null)
         {
-            _transaction.Rollback();
-            _transaction.Dispose();
-            _transaction = _connection.BeginTransaction();
+            dbTransaction.Rollback();
+            dbTransaction.Dispose();
+            dbTransaction = dbConnection.BeginTransaction();
             ResetRepositories();
         }
     }
@@ -87,20 +87,20 @@ public class DapperUnitOfWork : IDisposable
     public void Dispose()
     {
 
-        if (_transaction is not null)
+        if (dbTransaction is not null)
         {
-            _transaction.Dispose();
+            dbTransaction.Dispose();
         }
 
-        if (_connection is not null)
+        if (dbConnection is not null)
         {
-            _connection.Dispose();
+            dbConnection.Dispose();
         }
     }
 
     private void ResetRepositories()
     {
-        _customerRepository = null;
-        _customerTransactionRepository = null;
+        customerRepository = null;
+        customerTransactionRepository = null;
     }
 }
