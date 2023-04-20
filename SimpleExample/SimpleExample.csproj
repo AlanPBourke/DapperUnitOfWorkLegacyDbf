@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Database\customers.CDX" />
+    <None Remove="Database\customers.dbf" />
+    <None Remove="Database\customertransactions.CDX" />
+    <None Remove="Database\customertransactions.dbf" />
+    <None Remove="Database\sample.DBC" />
+    <None Remove="Database\sample.DCT" />
+    <None Remove="Database\sample.DCX" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Database\customers.CDX">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Database\customers.dbf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Database\customertransactions.CDX">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Database\customertransactions.dbf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Database\sample.DBC">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Database\sample.DCT">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Database\sample.DCX">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DapperUnitOfWorkLegacyDbf\DapperUnitOfWorkLegacyDbf.csproj" />
+  </ItemGroup>
+
+</Project>

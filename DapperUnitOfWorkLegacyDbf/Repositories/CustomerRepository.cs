@@ -59,10 +59,17 @@ public class CustomerRepository
         _transaction);
     }
 
-    public void Delete(string code)
+    public bool Delete(string customerCode)
     {
-        var cmd = @"delete from Customers where cu_code=?";
-        _connection.Execute(cmd, transaction: _transaction, param: new { c = code });
+        var cmd = @"select count(id) where tx_cust=? from CustomerTransactions";
+        var transactionCount = _connection.ExecuteScalar<int>(cmd, param: new { acc = customerCode }, transaction: _transaction);
+        if (transactionCount > 0)
+        {
+            return false;
+        }
+        cmd = @"delete from Customers where cu_code=?";
+        _connection.Execute(cmd, transaction: _transaction, param: new { c = customerCode });
+        return true;
     }
 
 }

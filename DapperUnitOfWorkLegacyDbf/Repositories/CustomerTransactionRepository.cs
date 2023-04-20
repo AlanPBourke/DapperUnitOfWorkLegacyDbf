@@ -46,6 +46,14 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
                 value = customerTransaction.Value
             },
             _transaction);
+
+            cmd = @"update Customers where cu_code = ? set cu_balance=cu_balance + ?";
+            _connection.ExecuteScalar(cmd, param: new
+            {
+                acc = customerTransaction.CustomerCode,
+                value = customerTransaction.Value
+            },
+            _transaction);
         }
     }
 }

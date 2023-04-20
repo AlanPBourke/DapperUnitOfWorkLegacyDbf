@@ -59,6 +59,41 @@ public class CustomerTransactionTests : IDisposable
     [Fact]
     public void Transaction_AddTwo_Commit()
     {
+        var customer1 = UnitOfWorkUnderTest.CustomerTransactionRepository.GetForCustomer("ABC100");
+        var customer2 = UnitOfWorkUnderTest.CustomerTransactionRepository.GetForCustomer("IKS220");
+        var total1pre = customer1.Sum(c => c.Value);
+        var total2pre = customer2.Sum(c => c.Value);
+        var value1 = (float)498.99;
+        var value2 = (float)1000.00;
+
+        UnitOfWorkUnderTest.CustomerTransactionRepository.Add(new CustomerTransaction
+        {
+            CustomerCode = "ABC100",
+            Reference = "ABC100 Invoice",
+            Type = "I",
+            Value = value1
+        });
+
+        UnitOfWorkUnderTest.CustomerTransactionRepository.Add(new CustomerTransaction
+        {
+            CustomerCode = "IKS220",
+            Reference = "IKS220 Credit Note",
+            Type = "C",
+            Value = value2
+        });
+
+        UnitOfWorkUnderTest.Commit();
+        customer1 = UnitOfWorkUnderTest.CustomerTransactionRepository.GetForCustomer("ABC100");
+        customer2 = UnitOfWorkUnderTest.CustomerTransactionRepository.GetForCustomer("IKS220");
+        var total1post = customer1.Sum(c => c.Value);
+        var total2post = customer2.Sum(c => c.Value);
+        Assert.Equal(7, customer1.Count() + customer2.Count());
+        Assert.Equal(total1pre + value1 + total2pre + value2, total1post + total2post);
+    }
+
+    [Fact]
+    public void Transaction_AddOne_Rollback()
+    {
         UnitOfWorkUnderTest.CustomerTransactionRepository.Add(new CustomerTransaction
         {
             CustomerCode = "ABC100",
@@ -67,17 +102,8 @@ public class CustomerTransactionTests : IDisposable
             Value = (float)498.99
         });
 
-        UnitOfWorkUnderTest.CustomerTransactionRepository.Add(new CustomerTransaction
-        {
-            CustomerCode = "IKS220",
-            Reference = "IKS220 Credit Note",
-            Type = "C",
-            Value = (float)-29.50
-        });
-
-        UnitOfWorkUnderTest.Commit();
+        UnitOfWorkUnderTest.Rollback();
         var t1 = UnitOfWorkUnderTest.CustomerTransactionRepository.GetForCustomer("ABC100");
-        var t2 = UnitOfWorkUnderTest.CustomerTransactionRepository.GetForCustomer("IKS220");
-        Assert.Equal(7, t1.Count() + t2.Count());
+        Assert.Equal(3, t1.Count());
     }
 }

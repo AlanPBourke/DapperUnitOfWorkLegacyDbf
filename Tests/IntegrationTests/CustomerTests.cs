@@ -97,21 +97,46 @@ public class CustomerTests : IDisposable
     }
 
     [Fact]
-    public void Customer_Delete_Rollback_CountShouldReturnTwo()
+    public void Customer_Delete_Rollback_Count()
     {
-        UnitOfWorkUnderTest.CustomerRepository.Delete("IKS220");
+        UnitOfWorkUnderTest.CustomerRepository.Add(new Customer
+        {
+            Code = "DELETEME",
+            Address1 = "address 1",
+            Address2 = "address 2",
+            Postcode = "postcode"
+        });
+
+        UnitOfWorkUnderTest.Commit();
+        UnitOfWorkUnderTest.CustomerRepository.Delete("DELETEME");
         UnitOfWorkUnderTest.Rollback();
+        var custs = UnitOfWorkUnderTest.CustomerRepository.GetAll();
+        Assert.Equal(3, custs.Count());
+    }
+
+    [Fact]
+    public void Customer_Delete_Commit_Count()
+    {
+        UnitOfWorkUnderTest.CustomerRepository.Add(new Customer
+        {
+            Code = "DELETEME",
+            Address1 = "address 1",
+            Address2 = "address 2",
+            Postcode = "postcode"
+        });
+
+        UnitOfWorkUnderTest.Commit();
+        UnitOfWorkUnderTest.CustomerRepository.Delete("DELETEME");
+        UnitOfWorkUnderTest.Commit();
         var custs = UnitOfWorkUnderTest.CustomerRepository.GetAll();
         Assert.Equal(2, custs.Count());
     }
 
     [Fact]
-    public void Customer_Delete_Commit_CountShouldReturnOne()
+    public void Customer_Delete_TransactionsPresent_ShouldReturnFalse()
     {
-        UnitOfWorkUnderTest.CustomerRepository.Delete("IKS220");
-        UnitOfWorkUnderTest.Commit();
-        var custs = UnitOfWorkUnderTest.CustomerRepository.GetAll();
-        Assert.Single(custs);
+        var canDelete = UnitOfWorkUnderTest.CustomerRepository.Delete("IKS220");
+        Assert.False(canDelete);
     }
 
 

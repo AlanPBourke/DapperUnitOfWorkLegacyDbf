@@ -101,5 +101,6 @@ public class DapperUnitOfWork : IDisposable
     private void ResetRepositories()
     {
         _customerRepository = null;
+        _customerTransactionRepository = null;
     }
 }
