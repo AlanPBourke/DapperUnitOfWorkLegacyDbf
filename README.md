@@ -1,6 +1,6 @@
 # DapperUnitOfWorkLegacyDbf
 
-A simple illustration of how the Dapper micro-ORM and FluentMap can be used with a Repository and Unit Of Work pattern to perform CRUD operations on a DBF database via OLEDB.
+This application demonstrates how to perform atomic create, update and delete operations on typical Customer and Customer Transaction tables in a one-to-many relationship, using the Dapper micro-ORM and FluentMap and a Repository\Unit Of Work pattern. The database is comprised of DBF files and is accessed using the Visual FoxPro OleDb driver. There are no rules, triggers or similar implemented at database level.
 
 As examples some integration tests using XUnit are provided in the 'Tests' project, and there is also a simple console application in the 'SimpleExample' project.
 
@@ -9,6 +9,16 @@ As examples some integration tests using XUnit are provided in the 'Tests' proje
 The Unit Of Work pattern allows database create, update and delete operations to be performed or rolled back as a single transaction, enabling database 'atomicity' where all updates occur, or none occur.
 
 A repository pattern isolates database operations from the user interface and allows database operations to be performed by adding, updating or deleting items from a collection of objects.
+
+There are two repository classes in the application, ```CustomerRepositoty``` and ```CustomerTransactionRepository```. . Each is passed a parameter of type **IDbConnection** through the constructor. The database connection to use is then retrieved from that parameter:
+
+```
+private IDbConnection _connection { get => transaction.Connection!; }
+```
+
+Note the null-forgiving '!' operator. This dependency injection of course makes the class database provider independent. The class then contains various methods for the database CRUD operations
+
+In this application the unit of work is represented by the ```DapperUnitOfWork``` class. This is a class implementing **IDisposable**. It has instances of ea
 
 ## Dapper And FluentMap
 
@@ -53,6 +63,34 @@ public class Customer
 }
 ```
 
+Dapper then provides the ability to do things like:
+
+```
+    public Customer GetByCode(string code)
+    {
+        var cmd = @"select cu_code, cu_name, cu_addr1, cu_addr2, cu_postcode, cu_balance ";
+        cmd += "from Customers where cu_code = ?";
+        return _connection.QueryFirstOrDefault<Customer>(cmd, param: new { c = code }, transaction);
+    }
+```
+
+Note the way that query parameters are implemented - OleDB does not support named parameters, only positional parameters. So where multiple parameters are used the order is vital:
+
+```
+    public void Update(Customer customer)
+    {
+        var cmd = @"update Customers set cu_name=?, cu_addr1=?, cu_addr2=?, cu_postcode=? where cu_code=?";
+        _connection.ExecuteScalar(cmd, param: new
+        {
+            n = customer.Name,
+            add1 = customer.Address1,
+            add2 = customer.Address2,
+            pc = customer.Postcode,
+            acc = customer.Code,
+        },
+        transaction);
+    }
+```    
 
 ### FluentMap
 [FluentMap](https://github.com/henkmollema/Dapper-FluentMap) is a Dapper extension allowing the mapping between C# entity properties and the associated database table fields to be explicitly declared.
