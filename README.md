@@ -8,9 +8,7 @@ As examples some integration tests using XUnit are provided in the 'Tests' proje
 
 The Unit Of Work pattern allows database create, update and delete operations to be performed or rolled back as a single transaction, enabling database 'atomicity' where all updates occur, or none occur.
 
-A repository pattern isolates database operations from the user interface and allows database operations to be represented as simple operations on a collection of objects.
-
-
+A repository pattern isolates database operations from the user interface and allows database operations to be performed by adding, updating or deleting items from a collection of objects.
 
 ## Dapper And FluentMap
 
