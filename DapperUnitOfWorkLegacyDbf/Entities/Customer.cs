@@ -6,9 +6,13 @@ public class Customer
 {
     [Key]
     public string Code { get; set; } = string.Empty;
+
     public string Name { get; set; } = string.Empty;
+
     public string Address1 { get; set; } = string.Empty;
+
     public string? Address2 { get; set; } = string.Empty;
+
     public string? Postcode { get; set; }
 
     [Write(false)]
@@ -19,5 +23,3 @@ public class Customer
         return $"{Code} {Name}";
     }
 }
-
-

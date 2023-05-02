@@ -6,13 +6,14 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
 {
     public class CustomerTransactionRepository
     {
-        private IDbConnection _connection { get => _transaction.Connection; }
-        private IDbTransaction _transaction;
+        private readonly IDbTransaction transaction;
 
         public CustomerTransactionRepository(IDbTransaction t)
         {
-            _transaction = t;
+            transaction = t;
         }
+
+        private IDbConnection _connection { get => transaction.Connection!; }
 
         public CustomerTransaction? GetById(int id)
         {
@@ -20,7 +21,7 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
 
             try
             {
-                return _connection.QuerySingle<CustomerTransaction>(cmd, param: new { i = id }, _transaction);
+                return _connection.QuerySingle<CustomerTransaction>(cmd, param: new { i = id }, transaction);
             }
             catch (Exception)
             {
@@ -31,7 +32,7 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
         public List<CustomerTransaction> GetForCustomer(string customerCode)
         {
             var cmd = @"select tx_cust, tx_type, tx_ref, tx_value, id from customertransactions where tx_cust=?";
-            return _connection.Query<CustomerTransaction>(cmd, param: new { c = customerCode }, _transaction).ToList();
+            return _connection.Query<CustomerTransaction>(cmd, param: new { c = customerCode }, transaction).ToList();
         }
 
         public void Add(CustomerTransaction customerTransaction)
@@ -43,17 +44,17 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
                 acc = customerTransaction.CustomerCode,
                 type = customerTransaction.Type,
                 reference = customerTransaction.Reference,
-                value = customerTransaction.Value
+                value = customerTransaction.Value,
             },
-            _transaction);
+            transaction);
 
             cmd = @"update Customers where cu_code = ? set cu_balance=cu_balance + ?";
             _connection.ExecuteScalar(cmd, param: new
             {
                 acc = customerTransaction.CustomerCode,
-                value = customerTransaction.Value
+                value = customerTransaction.Value,
             },
-            _transaction);
+            transaction);
         }
     }
 }

@@ -6,27 +6,27 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories;
 
 public class CustomerRepository
 {
-    private IDbConnection _connection { get => _transaction.Connection; }
-    private IDbTransaction _transaction;
+    private readonly IDbTransaction transaction;
 
     public CustomerRepository(IDbTransaction t)
     {
-        _transaction = t;
+        transaction = t;
     }
+
+    private IDbConnection _connection { get => transaction.Connection!; }
 
     public Customer GetByCode(string code)
     {
         var cmd = @"select cu_code, cu_name, cu_addr1, cu_addr2, cu_postcode, cu_balance ";
         cmd += "from Customers where cu_code = ?";
-        // EntityMap takes care of field names to entity properties.
-        return _connection.QueryFirstOrDefault<Customer>(cmd, param: new { c = code }, _transaction);
+        return _connection.QueryFirstOrDefault<Customer>(cmd, param: new { c = code }, transaction);
     }
 
     public List<Customer> GetAll()
     {
         var cmd = @"select cu_code, cu_name, cu_addr1, cu_addr2, cu_postcode, cu_balance ";
         cmd += "from Customers ";
-        return _connection.Query<Customer>(cmd, transaction: _transaction).ToList();
+        return _connection.Query<Customer>(cmd, transaction: transaction).ToList();
     }
 
     public void Update(Customer customer)
@@ -38,9 +38,9 @@ public class CustomerRepository
             add1 = customer.Address1,
             add2 = customer.Address2,
             pc = customer.Postcode,
-            acc = customer.Code
+            acc = customer.Code,
         },
-        _transaction);
+        transaction);
     }
 
     public void Add(Customer customer)
@@ -53,23 +53,22 @@ public class CustomerRepository
             n = customer.Name,
             add1 = customer.Address1,
             add2 = customer.Address2,
-            pc = customer.Postcode
-
+            pc = customer.Postcode,
         },
-        _transaction);
+        transaction);
     }
 
     public bool Delete(string customerCode)
     {
         var cmd = @"select count(id) where tx_cust=? from CustomerTransactions";
-        var transactionCount = _connection.ExecuteScalar<int>(cmd, param: new { acc = customerCode }, transaction: _transaction);
+        var transactionCount = _connection.ExecuteScalar<int>(cmd, param: new { acc = customerCode }, transaction: transaction);
         if (transactionCount > 0)
         {
             return false;
         }
+
         cmd = @"delete from Customers where cu_code=?";
-        _connection.Execute(cmd, transaction: _transaction, param: new { c = customerCode });
+        _connection.Execute(cmd, transaction: transaction, param: new { c = customerCode });
         return true;
     }
-
 }

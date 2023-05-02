@@ -7,37 +7,25 @@ using System.Data.OleDb;
 
 namespace DapperUnitOfWorkLegacyDbf.Dapper;
 
+/// <summary>
+/// A simple implementation of a unit of work pattern.
+/// <see cref="https://ianrufus.com/blog/2017/04/c-unit-of-work-pattern-with-dapper/">Refer to Ian Rufus' blog.</see>.
+/// </summary>
 public class DapperUnitOfWork : IDisposable
 {
-    private IDbConnection dbConnection;
+    private readonly IDbConnection dbConnection;
     private IDbTransaction dbTransaction;
 
-    private string ConnectionString { get; set; } = string.Empty;
-
-    private CustomerTransactionRepository? customerTransactionRepository { get; set; }
-    public CustomerTransactionRepository? CustomerTransactionRepository
-    {
-        get
-        {
-            return customerTransactionRepository ?? (customerTransactionRepository = new CustomerTransactionRepository(dbTransaction));
-        }
-    }
-
-    private CustomerRepository? customerRepository { get; set; }
-    public CustomerRepository? CustomerRepository
-    {
-        get
-        {
-            return customerRepository ?? (customerRepository = new CustomerRepository(dbTransaction));
-        }
-    }
-
-    // https://ianrufus.com/blog/2017/04/c-unit-of-work-pattern-with-dapper/
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DapperUnitOfWork"/> class.
+    /// Sets up the FluentMapper mappings and opens the OleDb connection.
+    /// </summary>
+    /// <param name="connString">The OleDb connection string.</param>
     public DapperUnitOfWork(string connString)
     {
         ConnectionString = connString;
 
-        if (FluentMapper.EntityMaps.Any(m => m.Key == typeof(Entities.Customer)) == false)
+        if (!FluentMapper.EntityMaps.Any(m => m.Key == typeof(Entities.Customer)))
         {
             FluentMapper.Initialize(config =>
             {
@@ -53,6 +41,34 @@ public class DapperUnitOfWork : IDisposable
         dbTransaction = dbConnection.BeginTransaction();
     }
 
+    /// <summary>
+    /// Gets the customer transaction repository.
+    /// </summary>
+    public CustomerTransactionRepository? CustomerTransactionRepository
+    {
+        get
+        {
+            return _customerTransactionRepository ??= new CustomerTransactionRepository(dbTransaction);
+        }
+    }
+
+    /// <summary>
+    /// Gets the customer repository.
+    /// </summary>
+    public CustomerRepository? CustomerRepository
+    {
+        get
+        {
+            return customerRepository ??= new CustomerRepository(dbTransaction);
+        }
+    }
+
+    private CustomerTransactionRepository? _customerTransactionRepository { get; set; }
+
+    private CustomerRepository? customerRepository { get; set; }
+
+    private string ConnectionString { get; set; }
+
     public void Commit()
     {
         try
@@ -66,7 +82,6 @@ public class DapperUnitOfWork : IDisposable
         }
         finally
         {
-
             dbTransaction.Dispose();
             dbTransaction = dbConnection.BeginTransaction();
             ResetRepositories();
@@ -86,21 +101,14 @@ public class DapperUnitOfWork : IDisposable
 
     public void Dispose()
     {
-
-        if (dbTransaction is not null)
-        {
-            dbTransaction.Dispose();
-        }
-
-        if (dbConnection is not null)
-        {
-            dbConnection.Dispose();
-        }
+        dbTransaction?.Dispose();
+        dbConnection?.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private void ResetRepositories()
     {
         customerRepository = null;
-        customerTransactionRepository = null;
+        _customerTransactionRepository = null;
     }
 }
