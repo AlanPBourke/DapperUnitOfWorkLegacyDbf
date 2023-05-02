@@ -15,6 +15,11 @@ public class Customer
 
     public string? Postcode { get; set; }
 
+    /// <summary>
+    /// Gets or sets the customer balance. Not writable. It can only
+    /// be updated by inserting, deleting or updating a
+    /// transaction or transactions for this customer.
+    /// </summary>
     [Write(false)]
     public float Balance { get; set; }
 

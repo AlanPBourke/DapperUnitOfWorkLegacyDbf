@@ -13,8 +13,8 @@ namespace DapperUnitOfWorkLegacyDbf.Dapper;
 /// </summary>
 public class DapperUnitOfWork : IDisposable
 {
-    private readonly IDbConnection dbConnection;
-    private IDbTransaction dbTransaction;
+    private readonly IDbConnection databaseConnection;
+    private IDbTransaction databaseTransaction;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DapperUnitOfWork"/> class.
@@ -35,8 +35,8 @@ public class DapperUnitOfWork : IDisposable
             });
         }
 
-        dbConnection = new OleDbConnection(ConnectionString);
-        dbConnection.Open();
+        databaseConnection = new OleDbConnection(ConnectionString);
+        databaseConnection.Open();
 
         // Some default setup items for the connection.
         // 'Set null off' - any inserts will insert the relevant empty value for the database field type instead of a null
@@ -44,9 +44,9 @@ public class DapperUnitOfWork : IDisposable
         // 'set exclusive off' - tables will be opened in shared mode.
         // 'set deleted on' - unintuitively this means that table rows marked as deleted will be ignored in SELECTs.
         var cmd = $"set null off{Environment.NewLine}set exclusive off{Environment.NewLine}set deleted on{Environment.NewLine}";
-        dbConnection.Execute(cmd);
+        databaseConnection.Execute(cmd);
 
-        dbTransaction = dbConnection.BeginTransaction();
+        databaseTransaction = databaseConnection.BeginTransaction();
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public class DapperUnitOfWork : IDisposable
     {
         get
         {
-            return _customerTransactionRepository ??= new CustomerTransactionRepository(dbTransaction);
+            return _customerTransactionRepository ??= new CustomerTransactionRepository(databaseTransaction);
         }
     }
 
@@ -67,13 +67,13 @@ public class DapperUnitOfWork : IDisposable
     {
         get
         {
-            return customerRepository ??= new CustomerRepository(dbTransaction);
+            return _customerRepository ??= new CustomerRepository(databaseTransaction);
         }
     }
 
     private CustomerTransactionRepository? _customerTransactionRepository { get; set; }
 
-    private CustomerRepository? customerRepository { get; set; }
+    private CustomerRepository? _customerRepository { get; set; }
 
     private string ConnectionString { get; set; }
 
@@ -84,42 +84,42 @@ public class DapperUnitOfWork : IDisposable
     {
         try
         {
-            dbTransaction.Commit();
+            databaseTransaction.Commit();
         }
         catch
         {
-            dbTransaction.Rollback();
+            databaseTransaction.Rollback();
             throw;
         }
         finally
         {
-            dbTransaction.Dispose();
-            dbTransaction = dbConnection.BeginTransaction();
+            databaseTransaction.Dispose();
+            databaseTransaction = databaseConnection.BeginTransaction();
             ResetRepositories();
         }
     }
 
     public void Rollback()
     {
-        if (dbTransaction is not null)
+        if (databaseTransaction is not null)
         {
-            dbTransaction.Rollback();
-            dbTransaction.Dispose();
-            dbTransaction = dbConnection.BeginTransaction();
+            databaseTransaction.Rollback();
+            databaseTransaction.Dispose();
+            databaseTransaction = databaseConnection.BeginTransaction();
             ResetRepositories();
         }
     }
 
     public void Dispose()
     {
-        dbTransaction?.Dispose();
-        dbConnection?.Dispose();
+        databaseTransaction?.Dispose();
+        databaseConnection?.Dispose();
         GC.SuppressFinalize(this);
     }
 
     private void ResetRepositories()
     {
-        customerRepository = null;
+        _customerRepository = null;
         _customerTransactionRepository = null;
     }
 }

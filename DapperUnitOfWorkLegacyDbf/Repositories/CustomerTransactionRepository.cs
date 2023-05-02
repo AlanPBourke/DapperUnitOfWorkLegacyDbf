@@ -6,14 +6,14 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
 {
     public class CustomerTransactionRepository
     {
-        private readonly IDbTransaction transaction;
+        private readonly IDbTransaction databaseTransaction;
 
         public CustomerTransactionRepository(IDbTransaction t)
         {
-            transaction = t;
+            databaseTransaction = t;
         }
 
-        private IDbConnection _connection { get => transaction.Connection!; }
+        private IDbConnection _connection { get => databaseTransaction.Connection!; }
 
         public CustomerTransaction? GetById(int id)
         {
@@ -21,7 +21,7 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
 
             try
             {
-                return _connection.QuerySingle<CustomerTransaction>(cmd, param: new { i = id }, transaction);
+                return _connection.QuerySingle<CustomerTransaction>(cmd, param: new { i = id }, databaseTransaction);
             }
             catch (Exception)
             {
@@ -32,7 +32,7 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
         public List<CustomerTransaction> GetForCustomer(string customerCode)
         {
             var cmd = @"select tx_cust, tx_type, tx_ref, tx_value, id from customertransactions where tx_cust=?";
-            return _connection.Query<CustomerTransaction>(cmd, param: new { c = customerCode }, transaction).ToList();
+            return _connection.Query<CustomerTransaction>(cmd, param: new { c = customerCode }, databaseTransaction).ToList();
         }
 
         public void Add(CustomerTransaction customerTransaction)
@@ -46,7 +46,7 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
                 reference = customerTransaction.Reference,
                 value = customerTransaction.Value,
             },
-            transaction);
+            databaseTransaction);
 
             cmd = @"update Customers where cu_code = ? set cu_balance=cu_balance + ?";
             _connection.ExecuteScalar(cmd, param: new
@@ -54,7 +54,7 @@ namespace DapperUnitOfWorkLegacyDbf.Repositories
                 acc = customerTransaction.CustomerCode,
                 value = customerTransaction.Value,
             },
-            transaction);
+            databaseTransaction);
         }
     }
 }
