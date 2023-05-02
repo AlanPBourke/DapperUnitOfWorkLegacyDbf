@@ -18,7 +18,8 @@ public class DapperUnitOfWork : IDisposable
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DapperUnitOfWork"/> class.
-    /// Sets up the FluentMapper mappings and opens the OleDb connection.
+    /// Sets up the unit of work and configures the FluentMap mappings. 
+    /// Opens the OleDb connection.
     /// </summary>
     /// <param name="connString">The OleDb connection string.</param>
     public DapperUnitOfWork(string connString)
@@ -36,8 +37,15 @@ public class DapperUnitOfWork : IDisposable
 
         dbConnection = new OleDbConnection(ConnectionString);
         dbConnection.Open();
+
+        // Some default setup items for the connection.
+        // 'Set null off' - any inserts will insert the relevant empty value for the database field type instead of a null
+        // where a value is not supplied.
+        // 'set exclusive off' - tables will be opened in shared mode.
+        // 'set deleted on' - unintuitively this means that table rows marked as deleted will be ignored in SELECTs.
         var cmd = $"set null off{Environment.NewLine}set exclusive off{Environment.NewLine}set deleted on{Environment.NewLine}";
         dbConnection.Execute(cmd);
+
         dbTransaction = dbConnection.BeginTransaction();
     }
 
@@ -69,6 +77,9 @@ public class DapperUnitOfWork : IDisposable
 
     private string ConnectionString { get; set; }
 
+    /// <summary>
+    /// Will attempt a commit of the current transaction.
+    /// </summary>
     public void Commit()
     {
         try
