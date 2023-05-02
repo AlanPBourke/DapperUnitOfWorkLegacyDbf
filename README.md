@@ -2,7 +2,19 @@
 
 A simple illustration of how the Dapper micro-ORM and FluentMap can be used with a Repository and Unit Of Work pattern to perform CRUD operations on a DBF database via OLEDB.
 
-## Dapper
+As examples some integration tests using XUnit are provided in the 'Tests' project, and there is also a simple console application in the 'SimpleExample' project.
+
+## The Unit Of Work And Repository Patterns
+
+The Unit Of Work pattern allows database create, update and delete operations to be performed or rolled back as a single transaction, enabling database 'atomicity' where all updates occur, or none occur.
+
+A repository pattern isolates database operations from the user interface and allows database operations to be represented as simple operations on a collection of objects.
+
+
+
+## Dapper And FluentMap
+
+### Dapper
 [Dapper](https://github.com/DapperLib/Dapper) is a popular micro-ORM \ object mapper that extends IDbConnection with convenience methods that return database results mapped to entity types.
 
 Here's a DBF-format database table:
@@ -44,7 +56,7 @@ public class Customer
 ```
 
 
-## FluentMap
+### FluentMap
 [FluentMap](https://github.com/henkmollema/Dapper-FluentMap) is a Dapper extension allowing the mapping between C# entity properties and the associated database table fields to be explicitly declared.
 
 ```
