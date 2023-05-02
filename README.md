@@ -7,7 +7,7 @@ A simple illustration of how the Dapper micro-ORM and FluentMapper can be used w
 
 Here's a DBF-format database table:
 
-!/assets/images/dbf.png
+![A DBF file.](/assets/images/dbf.png)
 
 ## FluentMapper
 
