@@ -4,6 +4,8 @@ This application demonstrates how to perform atomic create, update and delete op
 
 By way of usage examples some integration tests using XUnit are provided in the 'Tests' project, and there is also a simple console application in the 'SimpleExample' project.
 
+This is based on the approach detailed by Ian Rufus in [this blog entry](https://ianrufus.com/blog/2017/04/c-unit-of-work-pattern-with-dapper/).
+
 ***Important!***
 This application requires the [Microsoft Visual FoxPro 9.0 OleDb Provider](https://github.com/VFPX/VFP9SP2Hotfix3/blob/master/OLEDB_Release_Notes.md). This is a 32-bit only provider, there is no 64-bit version. As a result this application must be compiled for x86 only.
 
